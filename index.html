@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>テキスト連番ツール</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --sub: #6b7280;
+      --line: #d1d5db;
+      --accent: #2563eb;
+      --accent-weak: #dbeafe;
+      --error: #b91c1c;
+      --ok: #166534;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.9rem;
+    }
+
+    .lead {
+      margin: 0 0 20px;
+      color: var(--sub);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+    }
+
+    label.title {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .help {
+      margin: 0 0 10px;
+      font-size: 0.94rem;
+      color: var(--sub);
+    }
+
+    textarea, input[type="number"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font: inherit;
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 200px;
+      resize: vertical;
+      white-space: pre-wrap;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 16px;
+      align-items: end;
+      margin-top: 14px;
+    }
+
+    .checkrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      user-select: none;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .secondary {
+      background: var(--accent-weak);
+      color: var(--accent);
+    }
+
+    .ghost {
+      background: #eef2f7;
+      color: var(--text);
+    }
+
+    .status {
+      min-height: 1.6em;
+      margin-top: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .status.error { color: var(--error); }
+    .status.ok { color: var(--ok); }
+
+    .result {
+      min-height: 340px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #fbfdff;
+    }
+
+    .meta {
+      margin-top: 8px;
+      font-size: 0.92rem;
+      color: var(--sub);
+    }
+
+    code {
+      background: #eef2f7;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      .controls { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>テキスト連番ツール</h1>
+    <p class="lead">GitHub Pages にそのまま置ける、ブラウザだけで動く静的ツールです。</p>
+
+    <div class="grid">
+      <section class="card">
+        <label class="title" for="templateInput">① 入力ウィンドウフォーム</label>
+        <p class="help">
+          連番は <code>[開始番号,桁数]</code> で指定します。<br>
+          例：<code>テスト[101,4]</code> → 1回目は <code>テスト0101</code><br>
+          改行もそのまま使えます。
+        </p>
+        <textarea id="templateInput" spellcheck="false">テスト[101,4]</textarea>
+
+        <div class="controls">
+          <div>
+            <label class="title" for="repeatCount">② 試行回数フォーム</label>
+            <input id="repeatCount" type="number" min="1" max="10000" value="5" />
+          </div>
+          <div>
+            <label class="title">④ 改行有無チェックボックス</label>
+            <label class="checkrow">
+              <input id="lineBreakMode" type="checkbox" />
+              結果を各試行ごとに改行して分ける
+            </label>
+          </div>
+        </div>
+
+        <div class="buttons">
+          <button id="generateBtn" class="primary" type="button">生成</button>
+          <button id="copyBtn" class="secondary" type="button">結果をコピー</button>
+          <button id="clearBtn" class="ghost" type="button">結果を消去</button>
+          <button id="sampleBtn" class="ghost" type="button">改行サンプルを入れる</button>
+        </div>
+
+        <div id="status" class="status"></div>
+      </section>
+
+      <section class="card">
+        <label class="title" for="resultOutput">③ 結果ウィンドウ</label>
+        <textarea id="resultOutput" class="result" spellcheck="false" readonly></textarea>
+        <div id="meta" class="meta">文字数: 0</div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const templateInput = document.getElementById('templateInput');
+      const repeatCount = document.getElementById('repeatCount');
+      const lineBreakMode = document.getElementById('lineBreakMode');
+      const resultOutput = document.getElementById('resultOutput');
+      const status = document.getElementById('status');
+      const meta = document.getElementById('meta');
+      const generateBtn = document.getElementById('generateBtn');
+      const copyBtn = document.getElementById('copyBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const sampleBtn = document.getElementById('sampleBtn');
+
+      const SERIAL_PATTERN = /\[(\d+)\s*,\s*(\d+)\]/g;
+
+      function setStatus(message, type = '') {
+        status.textContent = message;
+        status.className = `status ${type}`.trim();
+      }
+
+      function padNumber(value, digits) {
+        return String(value).padStart(digits, '0');
+      }
+
+      function renderOne(template, index) {
+        let matched = false;
+        const rendered = template.replace(SERIAL_PATTERN, (_, start, digits) => {
+          matched = true;
+          const startNumber = Number(start);
+          const digitCount = Number(digits);
+
+          if (!Number.isInteger(startNumber) || !Number.isInteger(digitCount) || digitCount < 1) {
+            throw new Error('連番指定の形式が不正です。');
+          }
+
+          return padNumber(startNumber + index, digitCount);
+        });
+
+        return { rendered, matched };
+      }
+
+      function generateText() {
+        const template = templateInput.value;
+        const count = Number(repeatCount.value);
+        const separateByNewline = lineBreakMode.checked;
+
+        if (!Number.isInteger(count) || count < 1) {
+          throw new Error('試行回数は 1 以上の整数で入力してください。');
+        }
+
+        const blocks = [];
+        let foundAnyPattern = false;
+
+        for (let i = 0; i < count; i += 1) {
+          const { rendered, matched } = renderOne(template, i);
+          if (matched) foundAnyPattern = true;
+          blocks.push(rendered);
+        }
+
+        if (!foundAnyPattern) {
+          throw new Error('入力内に [開始番号,桁数] が見つかりません。例: [101,4]');
+        }
+
+        return blocks.join(separateByNewline ? '\n' : '');
+      }
+
+      function refresh() {
+        try {
+          const output = generateText();
+          resultOutput.value = output;
+          meta.textContent = `文字数: ${output.length}`;
+          setStatus('生成しました。', 'ok');
+        } catch (error) {
+          resultOutput.value = '';
+          meta.textContent = '文字数: 0';
+          setStatus(error.message, 'error');
+        }
+      }
+
+      async function copyResult() {
+        if (!resultOutput.value) {
+          setStatus('コピーする結果がありません。', 'error');
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(resultOutput.value);
+          setStatus('結果をコピーしました。', 'ok');
+        } catch (error) {
+          setStatus('コピーに失敗しました。ブラウザの権限をご確認ください。', 'error');
+        }
+      }
+
+      generateBtn.addEventListener('click', refresh);
+      copyBtn.addEventListener('click', copyResult);
+      clearBtn.addEventListener('click', () => {
+        resultOutput.value = '';
+        meta.textContent = '文字数: 0';
+        setStatus('結果を消去しました。', 'ok');
+      });
+      sampleBtn.addEventListener('click', () => {
+        templateInput.value = 'テスト\n[101,4]';
+        lineBreakMode.checked = true;
+        refresh();
+      });
+
+      templateInput.addEventListener('input', refresh);
+      repeatCount.addEventListener('input', refresh);
+      lineBreakMode.addEventListener('change', refresh);
+
+      refresh();
+    })();
+  </script>
+</body>
+</html>

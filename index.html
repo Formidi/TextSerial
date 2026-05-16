@@ -196,9 +196,7 @@
         </div>
 
         <div class="buttons">
-          <button id="generateBtn" class="primary" type="button">生成</button>
           <button id="copyBtn" class="secondary" type="button">結果をコピー</button>
-          <button id="clearBtn" class="ghost" type="button">結果を消去</button>
         </div>
 
         <div id="status" class="status"></div>
@@ -220,9 +218,7 @@
       const resultOutput = document.getElementById('resultOutput');
       const status = document.getElementById('status');
       const meta = document.getElementById('meta');
-      const generateBtn = document.getElementById('generateBtn');
       const copyBtn = document.getElementById('copyBtn');
-      const clearBtn = document.getElementById('clearBtn');
 
       const SERIAL_PATTERN = /\[(\d+)\s*,\s*(\d+)\]/g;
 
@@ -282,6 +278,7 @@
           const output = generateText();
           resultOutput.value = output;
           meta.textContent = `文字数: ${output.length}`;
+          setStatus('', '');
         } catch (error) {
           resultOutput.value = '';
           meta.textContent = '文字数: 0';
@@ -303,13 +300,7 @@
         }
       }
 
-      generateBtn.addEventListener('click', refresh);
       copyBtn.addEventListener('click', copyResult);
-      clearBtn.addEventListener('click', () => {
-        resultOutput.value = '';
-        meta.textContent = '文字数: 0';
-        setStatus('結果を消去しました。', 'ok');
-      });
       templateInput.addEventListener('input', refresh);
       repeatCount.addEventListener('input', refresh);
       lineBreakMode.addEventListener('change', refresh);

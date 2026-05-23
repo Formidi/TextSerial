@@ -3,18 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>テキスト連番ツール</title>
+  <title>テキスト支援ツール</title>
   <style>
     :root {
-      --bg: #f6f7fb;
-      --card: #ffffff;
-      --text: #1f2937;
-      --sub: #6b7280;
-      --line: #d1d5db;
-      --accent: #2563eb;
-      --accent-weak: #dbeafe;
-      --error: #b91c1c;
-      --ok: #166534;
+      --bg: #0f1117;
+      --bg-soft: #151925;
+      --card: #1b2030;
+      --card-strong: #22283a;
+      --text: #edf2ff;
+      --sub: #aab3c7;
+      --line: #343c52;
+      --line-strong: #59647e;
+      --accent: #73a7ff;
+      --accent-weak: rgba(115, 167, 255, 0.16);
+      --error: #ff8b8b;
+      --ok: #8df0b0;
+      --shadow: rgba(0, 0, 0, 0.38);
+      --tab-icon-size: 32px;
+      --tab-icon-sheet-width: 64px;
+      --tab-icon-sheet-height: 32px;
     }
 
     * { box-sizing: border-box; }
@@ -22,7 +29,9 @@
     body {
       margin: 0;
       font-family: "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
-      background: var(--bg);
+      background:
+        radial-gradient(circle at 20% 0%, rgba(115, 167, 255, 0.12), transparent 34%),
+        linear-gradient(180deg, #10131b 0%, var(--bg) 100%);
       color: var(--text);
       line-height: 1.6;
     }
@@ -34,14 +43,78 @@
     }
 
     h1 {
-      margin: 0 0 8px;
+      margin: 0 0 10px;
       font-size: 1.9rem;
+      letter-spacing: 0.04em;
+    }
+
+    h2 {
+      margin: 0 0 16px;
+      font-size: 1.35rem;
     }
 
     .lead {
-      margin: 0 0 20px;
+      margin: 0 0 18px;
       color: var(--sub);
     }
+
+    .tool-tabs {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin: 0 0 20px;
+      padding: 8px;
+      width: max-content;
+      max-width: 100%;
+      background: rgba(21, 25, 37, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 10px 28px var(--shadow);
+    }
+
+    .tool-tab {
+      display: inline-grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    }
+
+    .tool-tab:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: var(--line);
+    }
+
+    .tool-tab.is-active {
+      background: var(--accent-weak);
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px rgba(115, 167, 255, 0.16);
+    }
+
+    .tool-tab:focus-visible {
+      outline: 3px solid rgba(115, 167, 255, 0.55);
+      outline-offset: 2px;
+    }
+
+    .tab-icon {
+      display: block;
+      width: var(--tab-icon-size);
+      height: var(--tab-icon-size);
+      background-image: url("img/icon.png");
+      background-repeat: no-repeat;
+      background-size: var(--tab-icon-sheet-width) var(--tab-icon-sheet-height);
+    }
+
+    .tool-tab[data-tool="serial"] .tab-icon { background-position: 0 0; }
+    .tool-tab[data-tool="unicode"] .tab-icon { background-position: calc(var(--tab-icon-size) * -1) 0; }
+
+    .tool-panel[hidden] { display: none; }
 
     .grid {
       display: grid;
@@ -50,11 +123,11 @@
     }
 
     .card {
-      background: var(--card);
+      background: linear-gradient(180deg, var(--card) 0%, #181d2a 100%);
       border: 1px solid var(--line);
       border-radius: 16px;
       padding: 18px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 12px 30px var(--shadow);
     }
 
     label.title {
@@ -69,19 +142,35 @@
       color: var(--sub);
     }
 
-    textarea, input[type="number"] {
+    textarea,
+    input[type="number"] {
       width: 100%;
-      border: 1px solid var(--line);
+      border: 1px solid var(--line-strong);
       border-radius: 12px;
       padding: 12px 14px;
       font: inherit;
-      background: #fff;
+      background: #111521;
+      color: var(--text);
+      caret-color: var(--accent);
+    }
+
+    textarea:focus,
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(115, 167, 255, 0.18);
     }
 
     textarea {
       min-height: 200px;
       resize: vertical;
       white-space: pre-wrap;
+    }
+
+    textarea::placeholder { color: #6f7890; }
+
+    input[type="checkbox"] {
+      accent-color: var(--accent);
     }
 
     .controls {
@@ -97,6 +186,7 @@
       align-items: center;
       gap: 8px;
       margin-top: 10px;
+      color: var(--text);
       user-select: none;
     }
 
@@ -116,19 +206,14 @@
       cursor: pointer;
     }
 
-    .primary {
-      background: var(--accent);
-      color: #fff;
-    }
-
     .secondary {
       background: var(--accent-weak);
       color: var(--accent);
+      border: 1px solid rgba(115, 167, 255, 0.32);
     }
 
-    .ghost {
-      background: #eef2f7;
-      color: var(--text);
+    .secondary:hover {
+      background: rgba(115, 167, 255, 0.24);
     }
 
     .status {
@@ -145,7 +230,7 @@
       min-height: 340px;
       white-space: pre-wrap;
       word-break: break-word;
-      background: #fbfdff;
+      background: #0f131e;
     }
 
     .meta {
@@ -155,7 +240,9 @@
     }
 
     code {
-      background: #eef2f7;
+      background: #101521;
+      color: #cfe0ff;
+      border: 1px solid var(--line);
       padding: 2px 6px;
       border-radius: 6px;
     }
@@ -163,68 +250,117 @@
     @media (max-width: 860px) {
       .grid { grid-template-columns: 1fr; }
       .controls { grid-template-columns: 1fr; }
+      .tool-tabs { width: 100%; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>テキスト連番ツール</h1>
-    <p class="lead"></p>
+    <h1>テキスト支援ツール</h1>
+    <p class="lead">用途に合わせて上部のアイコンタブを切り替えてください。</p>
 
-    <div class="grid">
-      <section class="card">
-        <label class="title" for="templateInput">① 入力ウィンドウフォーム</label>
-        <p class="help">
-          連番は <code>[開始番号,桁数]</code> で指定します。<br>
-          例：<code>テスト[101,4]</code> → 1回目は <code>テスト0101</code><br>
-          改行もそのまま使えます。
-        </p>
-        <textarea id="templateInput" spellcheck="false">テスト[101,4]</textarea>
+    <nav class="tool-tabs" aria-label="ツール切り替え">
+      <button class="tool-tab is-active" type="button" data-tool="serial" role="tab" aria-selected="true" aria-controls="serialPanel" title="テキスト連番ツール" aria-label="テキスト連番ツール">
+        <span class="tab-icon" aria-hidden="true"></span>
+      </button>
+      <button class="tool-tab" type="button" data-tool="unicode" role="tab" aria-selected="false" aria-controls="unicodePanel" title="文字コード追記ツール" aria-label="文字コード追記ツール">
+        <span class="tab-icon" aria-hidden="true"></span>
+      </button>
+    </nav>
 
-        <div class="controls">
-          <div>
-            <label class="title" for="repeatCount">② 試行回数フォーム</label>
-            <input id="repeatCount" type="number" min="1" max="10000" value="5" />
+    <section id="serialPanel" class="tool-panel" data-panel="serial" role="tabpanel">
+      <h2>テキスト連番ツール</h2>
+      <div class="grid">
+        <section class="card">
+          <label class="title" for="templateInput">入力</label>
+          <p class="help">
+            連番は <code>[開始番号,桁数]</code> で指定します。<br>
+            例：<code>テスト[101,4]</code> → 1回目は <code>テスト0101</code><br>
+            改行もそのまま使えます。
+          </p>
+          <textarea id="templateInput" spellcheck="false">テスト[101,4]</textarea>
+
+          <div class="controls">
+            <div>
+              <label class="title" for="repeatCount">試行回数</label>
+              <input id="repeatCount" type="number" min="1" max="10000" value="5" />
+            </div>
+            <div>
+              <label class="title">④ 改行有無チェックボックス</label>
+              <label class="checkrow">
+                <input id="lineBreakMode" type="checkbox" />
+                結果を各試行ごとに改行して分ける
+              </label>
+            </div>
           </div>
-          <div>
-            <label class="title">④ 改行有無チェックボックス</label>
-            <label class="checkrow">
-              <input id="lineBreakMode" type="checkbox" />
-              結果を各試行ごとに改行して分ける
-            </label>
+
+          <div class="buttons">
+            <button id="copySerialBtn" class="secondary" type="button">結果をコピー</button>
           </div>
-        </div>
 
-        <div class="buttons">
-          <button id="copyBtn" class="secondary" type="button">結果をコピー</button>
-        </div>
+          <div id="serialStatus" class="status"></div>
+        </section>
 
-        <div id="status" class="status"></div>
-      </section>
+        <section class="card">
+          <label class="title" for="resultOutput">結果</label>
+          <textarea id="resultOutput" class="result" spellcheck="false" readonly></textarea>
+          <div id="serialMeta" class="meta">文字数: 0</div>
+        </section>
+      </div>
+    </section>
 
-      <section class="card">
-        <label class="title" for="resultOutput">③ 結果ウィンドウ</label>
-        <textarea id="resultOutput" class="result" spellcheck="false" readonly></textarea>
-        <div id="meta" class="meta">文字数: 0</div>
-      </section>
-    </div>
+    <section id="unicodePanel" class="tool-panel" data-panel="unicode" role="tabpanel" hidden>
+      <h2>文字コード追記ツール</h2>
+      <div class="grid">
+        <section class="card">
+          <label class="title" for="unicodeInput">入力</label>
+          <p class="help">
+            文字を入力すると、1文字ごとにUnicodeコードポイントを追記します。<br>
+            例：<code>安以宇</code>
+          </p>
+          <textarea id="unicodeInput" spellcheck="false" placeholder="安以宇">安以宇</textarea>
+
+          <div class="buttons">
+            <button id="copyUnicodeBtn" class="secondary" type="button">結果をコピー</button>
+          </div>
+
+          <div id="unicodeStatus" class="status"></div>
+        </section>
+
+        <section class="card">
+          <label class="title" for="unicodeOutput">結果</label>
+          <textarea id="unicodeOutput" class="result" spellcheck="false" readonly></textarea>
+          <div id="unicodeMeta" class="meta">対象文字数: 0</div>
+        </section>
+      </div>
+    </section>
   </div>
 
   <script>
     (() => {
+      const tabs = Array.from(document.querySelectorAll('.tool-tab'));
+      const panels = Array.from(document.querySelectorAll('.tool-panel'));
+
       const templateInput = document.getElementById('templateInput');
       const repeatCount = document.getElementById('repeatCount');
       const lineBreakMode = document.getElementById('lineBreakMode');
       const resultOutput = document.getElementById('resultOutput');
-      const status = document.getElementById('status');
-      const meta = document.getElementById('meta');
-      const copyBtn = document.getElementById('copyBtn');
+      const serialStatus = document.getElementById('serialStatus');
+      const serialMeta = document.getElementById('serialMeta');
+      const copySerialBtn = document.getElementById('copySerialBtn');
+
+      const unicodeInput = document.getElementById('unicodeInput');
+      const unicodeOutput = document.getElementById('unicodeOutput');
+      const unicodeStatus = document.getElementById('unicodeStatus');
+      const unicodeMeta = document.getElementById('unicodeMeta');
+      const copyUnicodeBtn = document.getElementById('copyUnicodeBtn');
 
       const SERIAL_PATTERN = /\[(\d+)\s*,\s*(\d+)\]/g;
+      const WHITESPACE_PATTERN = /\s/u;
 
-      function setStatus(message, type = '') {
-        status.textContent = message;
-        status.className = `status ${type}`.trim();
+      function setStatus(target, message, type = '') {
+        target.textContent = message;
+        target.className = `status ${type}`.trim();
       }
 
       function padNumber(value, digits) {
@@ -248,7 +384,7 @@
         return { rendered, matched };
       }
 
-      function generateText() {
+      function generateSerialText() {
         const template = templateInput.value;
         const count = Number(repeatCount.value);
         const separateByNewline = lineBreakMode.checked;
@@ -273,39 +409,77 @@
         return blocks.join(separateByNewline ? '\n' : '');
       }
 
-      function refresh() {
+      function refreshSerial() {
         try {
-          const output = generateText();
+          const output = generateSerialText();
           resultOutput.value = output;
-          meta.textContent = `文字数: ${output.length}`;
-          setStatus('', '');
+          serialMeta.textContent = `文字数: ${output.length}`;
+          setStatus(serialStatus, '', '');
         } catch (error) {
           resultOutput.value = '';
-          meta.textContent = '文字数: 0';
-          setStatus(error.message, 'error');
+          serialMeta.textContent = '文字数: 0';
+          setStatus(serialStatus, error.message, 'error');
         }
       }
 
-      async function copyResult() {
-        if (!resultOutput.value) {
-          setStatus('コピーする結果がありません。', 'error');
+      function getUnicodeTargets(text) {
+        return Array.from(text).filter((char) => !WHITESPACE_PATTERN.test(char));
+      }
+
+      function refreshUnicode() {
+        const chars = getUnicodeTargets(unicodeInput.value);
+        const output = chars
+          .map((char) => `${char} ${char.codePointAt(0).toString(16).toUpperCase()}`)
+          .join('\n');
+
+        unicodeOutput.value = output;
+        unicodeMeta.textContent = `対象文字数: ${chars.length}`;
+        setStatus(unicodeStatus, '', '');
+      }
+
+      async function copyText(value, statusTarget) {
+        if (!value) {
+          setStatus(statusTarget, 'コピーする結果がありません。', 'error');
           return;
         }
 
         try {
-          await navigator.clipboard.writeText(resultOutput.value);
-          setStatus('結果をコピーしました。', 'ok');
+          await navigator.clipboard.writeText(value);
+          setStatus(statusTarget, '結果をコピーしました。', 'ok');
         } catch (error) {
-          setStatus('コピーに失敗しました。ブラウザの権限をご確認ください。', 'error');
+          setStatus(statusTarget, 'コピーに失敗しました。ブラウザの権限をご確認ください。', 'error');
         }
       }
 
-      copyBtn.addEventListener('click', copyResult);
-      templateInput.addEventListener('input', refresh);
-      repeatCount.addEventListener('input', refresh);
-      lineBreakMode.addEventListener('change', refresh);
+      function activateTool(toolName) {
+        tabs.forEach((tab) => {
+          const isActive = tab.dataset.tool === toolName;
+          tab.classList.toggle('is-active', isActive);
+          tab.setAttribute('aria-selected', String(isActive));
+        });
 
-      refresh();
+        panels.forEach((panel) => {
+          panel.hidden = panel.dataset.panel !== toolName;
+        });
+
+        if (toolName === 'serial') refreshSerial();
+        if (toolName === 'unicode') refreshUnicode();
+      }
+
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', () => activateTool(tab.dataset.tool));
+      });
+
+      copySerialBtn.addEventListener('click', () => copyText(resultOutput.value, serialStatus));
+      templateInput.addEventListener('input', refreshSerial);
+      repeatCount.addEventListener('input', refreshSerial);
+      lineBreakMode.addEventListener('change', refreshSerial);
+
+      copyUnicodeBtn.addEventListener('click', () => copyText(unicodeOutput.value, unicodeStatus));
+      unicodeInput.addEventListener('input', refreshUnicode);
+
+      refreshSerial();
+      refreshUnicode();
     })();
   </script>
 </body>
